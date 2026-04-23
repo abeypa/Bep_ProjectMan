@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-
-export type UserRole = 'admin' | 'user';
+import { UserRole } from '@/types';
 
 export function useRole() {
   const [role, setRole] = useState<UserRole | null>(null);
@@ -20,13 +19,14 @@ export function useRole() {
 
         setUserEmail(user.email ?? null);
 
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('profiles')
           .select('role')
           .eq('id', user.id)
           .single();
 
-        setRole((data as any)?.role || 'user');
+        if (error) throw error;
+        setRole(data.role as UserRole);
       } catch (err) {
         console.error('Failed to fetch role:', err);
         setRole('user'); // fallback

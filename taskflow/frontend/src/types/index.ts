@@ -6,12 +6,15 @@ export type WorkspaceRole = "owner" | "admin" | "member" | "viewer"
 export type ProjectStatus = "active" | "archived"
 export type InvitationStatus = "pending" | "accepted" | "expired" | "cancelled"
 
+export type UserRole = "admin" | "user"
+
 export interface Profile {
   id: string
-  username: string | null
+  username: string
   full_name: string | null
   avatar_url: string | null
-  website: string | null
+  role: UserRole
+  website?: string | null
   bio: string | null
   is_private: boolean
   plan: string

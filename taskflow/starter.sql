@@ -21,6 +21,9 @@ create type project_status as enum ('active', 'archived');
 
 -- Invitation status
 create type invitation_status as enum ('pending', 'accepted', 'expired', 'cancelled');
+
+-- Global user roles
+create type user_role as enum ('admin', 'user');
 -- endregion
 
 -- =============================================================================
@@ -40,6 +43,7 @@ create table if not exists public.profiles
     is_private boolean default false,
     bio text default '',
     plan text not null default 'free',
+    role user_role not null default 'user',
     preferences jsonb not null default '{}'::jsonb,
     constraint username_length check (char_length(username) >= 3)
 );
@@ -539,6 +543,7 @@ returns trigger as $$
 declare
     new_username text;
     personal_ws_id uuid;
+    assigned_role user_role;
 begin
     -- Generate username from email or metadata
     new_username := coalesce(
@@ -550,14 +555,24 @@ begin
     while exists(select 1 from profiles where username = new_username) loop
         new_username := new_username || substr(md5(random()::text), 0, 5);
     end loop;
+
+    -- Smart role assignment: metadata > @bepindia.com domain > default user
+    assigned_role := coalesce(
+        (new.raw_user_meta_data ->> 'role')::user_role,
+        case 
+            when new.email like '%@bepindia.com' then 'admin'::user_role 
+            else 'user'::user_role 
+        end
+    );
     
     -- Create profile
-    insert into public.profiles (id, full_name, username, avatar_url)
+    insert into public.profiles (id, full_name, username, avatar_url, role)
     values (
         new.id, 
         coalesce(new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'name'),
         new_username,
-        new.raw_user_meta_data ->> 'avatar_url'
+        new.raw_user_meta_data ->> 'avatar_url',
+        assigned_role
     );
     
     -- Create personal workspace
