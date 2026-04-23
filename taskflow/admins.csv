@@ -1,0 +1,4 @@
+id,username,full_name,role,plan,is_private,bio,preferences
+00000000-0000-0000-0000-000000000001,admin,System Administrator,admin,premium,false,Main system admin,{}
+59920194-04aa-4c83-a2d6-b2e0d45def0e,train,Training Admin,admin,free,false,Account for training,{}
+00000000-0000-0000-0000-000000000003,manager,Project Manager,user,free,false,Project manager user,{}

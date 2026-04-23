@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "csv-parse": "^6.2.1",
+    "dotenv": "^17.4.2"
+  }
+}

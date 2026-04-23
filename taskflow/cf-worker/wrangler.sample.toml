@@ -1,0 +1,37 @@
+# TaskFlow Worker Configuration
+# Copy this file to wrangler.toml and fill in your values
+
+name = "taskflow-api"
+main = "src/worker.ts"
+compatibility_date = "2024-01-01"
+
+# Your Cloudflare account ID
+account_id = "<your-cloudflare-account-id>"
+
+# Optional: Custom domain routing
+# route = { pattern = "api.yourdomain.com/*", zone_name = "yourdomain.com" }
+
+# Environment variables
+[vars]
+SUPABASE_URL = "https://<your-project>.supabase.co"
+SUPABASE_ANON_TOKEN = "<your-supabase-anon-key>"
+USER_ASSET_BASE_URL_1 = "https://cdn.yourdomain.com"
+
+# R2 Bucket for user assets
+[[r2_buckets]]
+binding = "USER_ASSETS_BUCKET_1"
+bucket_name = "taskflow-assets"
+
+# Staging environment (optional)
+[env.staging]
+name = "taskflow-api-staging"
+# route = { pattern = "api-staging.yourdomain.com/*", zone_name = "yourdomain.com" }
+
+[env.staging.vars]
+SUPABASE_URL = "https://<your-staging-project>.supabase.co"
+SUPABASE_ANON_TOKEN = "<your-staging-anon-key>"
+USER_ASSET_BASE_URL_1 = "https://cdn-staging.yourdomain.com"
+
+[[env.staging.r2_buckets]]
+binding = "USER_ASSETS_BUCKET_1"
+bucket_name = "taskflow-assets-staging"
