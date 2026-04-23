@@ -8,9 +8,8 @@ import { ROUTES } from "@/lib/constants"
 
 export function useAuth() {
   const navigate = useNavigate()
-  const [session, setSession] = useState<Session | null>(null)
+  const { session, setSession, user, setUser, reset } = useAppStore()
   const [loading, setLoading] = useState(true)
-  const { user, setUser, reset } = useAppStore()
 
   // Fetch user profile
   const fetchProfile = useCallback(async (userId: string) => {

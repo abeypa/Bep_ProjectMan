@@ -1,9 +1,12 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
+import { Session } from "@supabase/supabase-js"
 import { Profile, Workspace, Project } from "@/types"
 
 interface AppState {
   // Auth
+  session: Session | null
+  setSession: (session: Session | null) => void
   user: Profile | null
   setUser: (user: Profile | null) => void
 
@@ -39,6 +42,7 @@ interface AppState {
 }
 
 const initialState = {
+  session: null,
   user: null,
   currentWorkspace: null,
   currentProject: null,
@@ -54,6 +58,7 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       ...initialState,
 
+      setSession: (session) => set({ session }),
       setUser: (user) => set({ user }),
 
       setCurrentWorkspace: (workspace) => set({ currentWorkspace: workspace }),
