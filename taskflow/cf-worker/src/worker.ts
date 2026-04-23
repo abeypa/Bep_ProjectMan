@@ -22,6 +22,9 @@ export interface Env {
 
   // Base URL for serving assets
   USER_ASSET_BASE_URL_1: string
+
+  // Built-in assets binding for unified deployment
+  ASSETS: { fetch: (request: Request) => Promise<Response> }
 }
 
 // CORS headers for all responses
@@ -433,7 +436,25 @@ export default {
         })
       }
 
-      // Default: proxy to Supabase
+      // Default: Try serving from static assets, then fallback to Supabase or SPA index.html
+      const assetResponse = await env.ASSETS.fetch(request)
+      
+      if (assetResponse.status !== 404) {
+        return assetResponse
+      }
+
+      // SPA Routing: If asset not found, serve index.html for non-API routes
+      const isApiRoute = 
+        pathParts[0] === 'api' || 
+        pathParts[0] === 'rest' || 
+        pathParts[0] === 'auth' || 
+        pathParts[0] === 'realtime'
+
+      if (!isApiRoute) {
+        const spaRequest = new Request(new URL('/index.html', url.origin), request)
+        return env.ASSETS.fetch(spaRequest)
+      }
+
       return proxyToSupabase(request, env, url.pathname)
       
     } catch (error) {
