@@ -99,7 +99,7 @@ export function useWorkspaceInvitations(workspaceId: string | undefined) {
 // Create workspace mutation
 export function useCreateWorkspace() {
   const queryClient = useQueryClient()
-  const { user } = useAuth()
+  const { authUserId } = useAuth()
 
   return useMutation({
     mutationFn: async (input: CreateWorkspaceInput) => {
@@ -107,7 +107,7 @@ export function useCreateWorkspace() {
         ws_name: input.name,
         ws_slug: input.slug,
         ws_description: input.description,
-        creator_id: user?.id,
+        creator_id: authUserId,
       })
 
       if (error) throw error

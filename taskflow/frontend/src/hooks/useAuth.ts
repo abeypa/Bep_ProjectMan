@@ -161,19 +161,8 @@ export function useAuth() {
     return { data: data as Profile | null, error }
   }
 
-  return {
-    session,
-    user,
-    loading,
-    isAuthenticated: !!session,
-    signUp,
-    signIn,
-    signInWithMagicLink,
-    signInWithOAuth,
-    signOut,
-    resetPassword,
-    updatePassword,
     updateProfile,
     fetchProfile,
+    authUserId: session?.user?.id,
   }
 }
