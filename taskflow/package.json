@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "frontend:build": "cd frontend && npm install && npm run build",
+    "frontend:deploy": "wrangler pages deploy taskflow/frontend/dist"
+  },
   "devDependencies": {
     "csv-parse": "^6.2.1",
     "dotenv": "^17.4.2"
