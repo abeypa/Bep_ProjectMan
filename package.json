@@ -2,10 +2,12 @@
   "name": "taskflow-monorepo",
   "private": true,
   "scripts": {
-    "build": "cd taskflow/frontend && npm install && npm run build",
+    "build": "npm run install:all && npm run frontend:build",
+    "install:all": "cd taskflow/frontend && npm install && cd ../cf-worker && npm install",
     "deploy": "npx wrangler deploy"
   },
   "devDependencies": {
-    "wrangler": "^3.84.1"
+    "wrangler": "^3.84.1",
+    "@supabase/supabase-js": "^2.46.1"
   }
 }
