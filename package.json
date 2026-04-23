@@ -2,10 +2,10 @@
   "name": "taskflow-monorepo",
   "private": true,
   "scripts": {
-    "build": "npm run frontend:build",
-    "deploy": "npm run frontend:deploy",
-    "frontend:build": "cd taskflow/frontend && npm install && npm run build",
-    "frontend:deploy": "npx wrangler pages deploy taskflow/frontend/dist --project-name taskflow-frontend",
-    "worker:deploy": "cd taskflow/cf-worker && npx wrangler deploy"
+    "build": "cd taskflow/frontend && npm install && npm run build",
+    "deploy": "npx wrangler pages deploy taskflow/frontend/dist --project-name bepprojectmanag"
+  },
+  "devDependencies": {
+    "wrangler": "^3.84.1"
   }
 }
