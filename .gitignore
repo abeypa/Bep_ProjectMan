@@ -23,7 +23,6 @@ build/
 
 # Cloudflare
 .wrangler/
-**/wrangler.toml
 
 # IDE
 .idea/

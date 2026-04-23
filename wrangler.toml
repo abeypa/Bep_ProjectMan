@@ -1,0 +1,8 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "bepprojectmanag"
+compatibility_date = "2024-01-01"
+# Point to the nested build directory from the root
+pages_build_output_dir = "taskflow/frontend/dist"
+
+[vars]
+# Environment variables should be managed in the Cloudflare Dashboard
