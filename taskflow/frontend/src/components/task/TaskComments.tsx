@@ -135,7 +135,7 @@ function CommentItem({ comment, currentUserId, onDelete }: CommentItemProps) {
 
   return (
     <div className="flex gap-3 group">
-      <UserAvatar user={comment.author} size="sm" />
+      <UserAvatar user={comment.author || null} size="sm" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-medium text-sm">

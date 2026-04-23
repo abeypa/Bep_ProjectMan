@@ -227,7 +227,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <ScrollArea className="flex-1" orientation="horizontal">
+      <ScrollArea className="flex-1">
         <div className="flex gap-4 p-6 min-h-full">
           {columns.map((column) => (
             <BoardColumn key={column.id} column={column} />
