@@ -2,7 +2,7 @@
   "name": "taskflow-monorepo",
   "private": true,
   "scripts": {
-    "build": "npm run install:all && npm run frontend:build",
+    "build": "npm run install:all && cd taskflow/frontend && npm run build",
     "install:all": "cd taskflow/frontend && npm install && cd ../cf-worker && npm install",
     "deploy": "npx wrangler deploy"
   },
