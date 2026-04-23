@@ -829,13 +829,22 @@ create trigger handle_updated_at_user_assets
 create or replace function public.create_workspace(
     ws_name text,
     ws_slug text default null,
-    ws_description text default null
+    ws_description text default null,
+    creator_id uuid default null
 )
 returns workspaces as $$
 declare
     workspace workspaces;
     final_slug text;
+    actual_creator_id uuid;
 begin
+    -- Use provided creator_id or fall back to auth.uid()
+    actual_creator_id := coalesce(creator_id, auth.uid());
+    
+    if actual_creator_id is null then
+        raise exception 'Creator ID is required';
+    end if;
+
     -- Generate slug if not provided
     final_slug := coalesce(ws_slug, lower(regexp_replace(ws_name, '[^a-zA-Z0-9]+', '-', 'g')));
     
@@ -846,12 +855,12 @@ begin
     
     -- Create workspace
     insert into workspaces (slug, name, description, owner_id)
-    values (final_slug, ws_name, ws_description, auth.uid())
+    values (final_slug, ws_name, ws_description, actual_creator_id)
     returning * into workspace;
     
     -- Add creator as owner
     insert into workspace_members (workspace_id, user_id, role)
-    values (workspace.id, auth.uid(), 'owner');
+    values (workspace.id, actual_creator_id, 'owner');
     
     return workspace;
 end;

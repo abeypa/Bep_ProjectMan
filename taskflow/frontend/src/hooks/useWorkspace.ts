@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/lib/supabase"
 import { useAppStore } from "@/store"
+import { useAuth } from "@/hooks/useAuth"
 import {
   Workspace,
   WorkspaceWithCounts,
@@ -98,6 +99,7 @@ export function useWorkspaceInvitations(workspaceId: string | undefined) {
 // Create workspace mutation
 export function useCreateWorkspace() {
   const queryClient = useQueryClient()
+  const { user } = useAuth()
 
   return useMutation({
     mutationFn: async (input: CreateWorkspaceInput) => {
@@ -105,6 +107,7 @@ export function useCreateWorkspace() {
         ws_name: input.name,
         ws_slug: input.slug,
         ws_description: input.description,
+        creator_id: user?.id,
       })
 
       if (error) throw error
