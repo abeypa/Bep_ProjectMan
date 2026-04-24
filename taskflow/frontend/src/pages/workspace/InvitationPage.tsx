@@ -7,7 +7,8 @@ import {
   AlertTriangle, 
   ArrowRight,
   Loader2,
-  Calendar
+  Calendar,
+  Mail
 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"

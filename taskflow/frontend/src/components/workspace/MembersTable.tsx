@@ -28,7 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/components"
 import {
   WorkspaceMemberWithProfile,
   WorkspaceRole,
@@ -228,7 +228,7 @@ export function MembersTable({
                             )}
                           </>
                         )}
-                        {!isMe && (canManageRoles || currentUserRole === "owner") && (
+                        {!isMe && (canManageRoles || (currentUserRole as string) === "owner") && (
                           <>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem

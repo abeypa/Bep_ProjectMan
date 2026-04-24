@@ -32,11 +32,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Separator,
+  Badge,
 } from "@/components/ui/components"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
 import {
   useWorkspace,
   useWorkspaceMembers,
@@ -141,10 +141,6 @@ export function WorkspaceSettingsPage() {
     <div className="flex flex-col h-full bg-muted/10">
       <Header 
         title="Workspace Settings" 
-        breadcrumb={[
-          { label: workspace.name, href: `/w/${workspaceSlug}` },
-          { label: "Settings" }
-        ]}
       />
 
       <div className="flex-1 overflow-y-auto">

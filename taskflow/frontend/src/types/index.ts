@@ -53,7 +53,7 @@ export interface WorkspaceMember {
   created_at: string
   updated_at: string
   // Joined data
-  profile?: Profile
+  profile?: Profile | null
 }
 
 export interface WorkspaceInvitation {

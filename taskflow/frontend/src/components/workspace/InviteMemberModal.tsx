@@ -130,7 +130,7 @@ export function InviteMemberModal({
             <FormField
               control={form.control}
               name="email"
-              render={({ field }) => (
+              render={({ field }: any) => (
                 <FormItem>
                   <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">
                     Network Identifier (Email)
@@ -153,7 +153,7 @@ export function InviteMemberModal({
             <FormField
               control={form.control}
               name="role"
-              render={({ field }) => (
+              render={({ field }: any) => (
                 <FormItem className="space-y-3">
                   <FormLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground px-1">
                     Authorization Tier (Role)
