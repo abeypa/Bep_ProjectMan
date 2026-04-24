@@ -3,6 +3,7 @@ import { Toaster } from "sonner"
 
 // Auth
 import { AuthGuard } from "@/components/auth/AuthGuard"
+import { PublicRoute } from "@/components/auth/PublicRoute"
 import { LoginPage } from "@/pages/auth/Login"
 import { SignupPage } from "@/pages/auth/Signup"
 
@@ -23,9 +24,23 @@ function App() {
   return (
     <TooltipProvider delayDuration={0}>
       <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
+        {/* Public Auth Routes */}
+        <Route 
+          path="/login" 
+          element={
+            <PublicRoute>
+              <LoginPage />
+            </PublicRoute>
+          } 
+        />
+        <Route 
+          path="/signup" 
+          element={
+            <PublicRoute>
+              <SignupPage />
+            </PublicRoute>
+          } 
+        />
 
         {/* Protected Routes */}
         <Route
