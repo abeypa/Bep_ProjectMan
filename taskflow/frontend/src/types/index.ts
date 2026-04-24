@@ -2,7 +2,7 @@
 // These mirror the Supabase schema
 
 export type TaskPriority = "none" | "low" | "medium" | "high" | "urgent"
-export type WorkspaceRole = "owner" | "admin" | "member" | "viewer"
+export type WorkspaceRole = "owner" | "admin" | "member" | "guest"
 export type ProjectStatus = "active" | "archived"
 export type InvitationStatus = "pending" | "accepted" | "expired" | "cancelled"
 
@@ -67,6 +67,21 @@ export interface WorkspaceInvitation {
   expires_at: string
   accepted_at: string | null
   created_at: string
+}
+
+export interface WorkspaceMemberWithProfile extends WorkspaceMember {
+  profile: Profile | null
+}
+
+export interface WorkspaceInvitationDetails {
+  id: string
+  workspace_id: string
+  workspace_name: string
+  workspace_slug: string
+  email: string
+  role: WorkspaceRole
+  expires_at: string
+  status: InvitationStatus
 }
 
 export interface Project {

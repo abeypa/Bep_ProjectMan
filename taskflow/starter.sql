@@ -7,6 +7,7 @@
 -- region Extensions
 create extension if not exists moddatetime schema extensions;
 create extension if not exists "uuid-ossp" schema extensions;
+create extension if not exists pgcrypto;
 -- endregion
 
 -- region Enums
@@ -14,7 +15,7 @@ create extension if not exists "uuid-ossp" schema extensions;
 create type task_priority as enum ('none', 'low', 'medium', 'high', 'urgent');
 
 -- Workspace member roles
-create type workspace_role as enum ('owner', 'admin', 'member', 'viewer');
+create type workspace_role as enum ('owner', 'admin', 'member', 'guest');
 
 -- Project status
 create type project_status as enum ('active', 'archived');
@@ -283,12 +284,12 @@ $$ language plpgsql security definer stable;
 create or replace function public.can_manage_workspace(ws_id uuid)
 returns boolean as $$
 begin
-    return (
+    return coalesce((
         select role in ('owner', 'admin') 
         from workspace_members 
         where workspace_id = ws_id 
         and user_id = auth.uid()
-    );
+    ), false);
 end;
 $$ language plpgsql security definer stable;
 
@@ -296,12 +297,12 @@ $$ language plpgsql security definer stable;
 create or replace function public.can_edit_workspace(ws_id uuid)
 returns boolean as $$
 begin
-    return (
+    return coalesce((
         select role in ('owner', 'admin', 'member') 
         from workspace_members 
         where workspace_id = ws_id 
         and user_id = auth.uid()
-    );
+    ), false);
 end;
 $$ language plpgsql security definer stable;
 
@@ -374,7 +375,8 @@ create policy "Workspace admins can manage membership"
 
 create policy "Workspace admins can update membership"
     on workspace_members for update
-    using (can_manage_workspace(workspace_id));
+    using (can_manage_workspace(workspace_id))
+    with check (can_manage_workspace(workspace_id));
 
 create policy "Workspace admins can delete membership"
     on workspace_members for delete
@@ -391,7 +393,8 @@ create policy "Workspace admins can create invitations"
 
 create policy "Workspace admins can update invitations"
     on workspace_invitations for update
-    using (can_manage_workspace(workspace_id));
+    using (can_manage_workspace(workspace_id))
+    with check (can_manage_workspace(workspace_id));
 
 create policy "Workspace admins can delete invitations"
     on workspace_invitations for delete
@@ -740,6 +743,23 @@ begin
 end;
 $$ language plpgsql;
 
+create or replace function public.protect_workspace_owner_membership()
+returns trigger as $$
+begin
+    if old.role = 'owner' then
+        if tg_op = 'DELETE' then
+            raise exception 'Owner cannot be removed';
+        end if;
+
+        if tg_op = 'UPDATE' and new.role != old.role then
+            raise exception 'Owner role cannot be changed';
+        end if;
+    end if;
+
+    return case when tg_op = 'DELETE' then old else new end;
+end;
+$$ language plpgsql;
+
 -- endregion
 
 -- =============================================================================
@@ -794,6 +814,10 @@ create trigger handle_updated_at_workspaces
 create trigger handle_updated_at_workspace_members
     before update on workspace_members
     for each row execute procedure public.handle_updated_at();
+
+create trigger protect_workspace_owner_membership_trigger
+    before update or delete on workspace_members
+    for each row execute procedure public.protect_workspace_owner_membership();
 
 create trigger handle_updated_at_projects
     before update on projects
@@ -876,28 +900,74 @@ returns workspace_invitations as $$
 declare
     invitation workspace_invitations;
     existing_user_id uuid;
+    normalized_email text;
 begin
+    normalized_email := lower(trim(member_email));
+
+    if normalized_email = '' then
+        raise exception 'Email is required';
+    end if;
+
     -- Check if user is admin/owner
     if not can_manage_workspace(ws_id) then
         raise exception 'Not authorized to invite members';
     end if;
     
     -- Check if user already exists and is already a member
-    select id into existing_user_id from auth.users where email = member_email;
+    select id into existing_user_id from auth.users where lower(email) = normalized_email;
     if existing_user_id is not null and exists(
         select 1 from workspace_members where workspace_id = ws_id and user_id = existing_user_id
     ) then
         raise exception 'User is already a member of this workspace';
     end if;
+
+    if exists(
+        select 1
+        from workspace_invitations
+        where workspace_id = ws_id
+        and lower(email) = normalized_email
+        and status = 'pending'
+        and expires_at > now()
+    ) then
+        raise exception 'A pending invitation already exists for this email';
+    end if;
     
     -- Create invitation
     insert into workspace_invitations (workspace_id, email, role, invited_by)
-    values (ws_id, member_email, member_role, auth.uid())
+    values (ws_id, normalized_email, member_role, auth.uid())
     returning * into invitation;
     
     return invitation;
 end;
 $$ language plpgsql security definer;
+
+create or replace function public.get_workspace_invitation_details(invitation_token text)
+returns table (
+    id uuid,
+    workspace_id uuid,
+    workspace_name text,
+    workspace_slug text,
+    email text,
+    role workspace_role,
+    expires_at timestamp with time zone,
+    status invitation_status
+) as $$
+begin
+    return query
+    select
+        wi.id,
+        wi.workspace_id,
+        w.name as workspace_name,
+        w.slug as workspace_slug,
+        wi.email,
+        wi.role,
+        wi.expires_at,
+        wi.status
+    from workspace_invitations wi
+    join workspaces w on w.id = wi.workspace_id
+    where wi.token = invitation_token;
+end;
+$$ language plpgsql security definer stable;
 
 -- Accept workspace invitation
 create or replace function public.accept_workspace_invitation(invitation_token text)
@@ -905,6 +975,7 @@ returns workspace_members as $$
 declare
     inv workspace_invitations;
     member workspace_members;
+    current_email text;
 begin
     -- Get invitation
     select * into inv from workspace_invitations 
@@ -917,8 +988,18 @@ begin
     end if;
     
     -- Check if current user's email matches
-    if (select email from auth.users where id = auth.uid()) != inv.email then
+    select lower(email) into current_email from auth.users where id = auth.uid();
+    if current_email != lower(inv.email) then
         raise exception 'Invitation is for a different email address';
+    end if;
+
+    select * into member
+    from workspace_members
+    where workspace_id = inv.workspace_id
+    and user_id = auth.uid();
+
+    if member is not null then
+        raise exception 'You are already a member of this workspace';
     end if;
     
     -- Update invitation status
@@ -932,6 +1013,74 @@ begin
     returning * into member;
     
     return member;
+end;
+$$ language plpgsql security definer;
+
+create or replace function public.update_workspace_member_role(
+    p_member_id uuid,
+    p_role workspace_role
+)
+returns workspace_members as $$
+declare
+    target_member workspace_members;
+    updated_member workspace_members;
+    actor_role workspace_role;
+begin
+    select * into target_member
+    from workspace_members
+    where id = p_member_id;
+
+    if target_member is null then
+        raise exception 'Workspace member not found';
+    end if;
+
+    actor_role := get_workspace_role(target_member.workspace_id);
+
+    if actor_role not in ('owner', 'admin') then
+        raise exception 'Not authorized to update member roles';
+    end if;
+
+    if target_member.role = 'owner' and p_role != 'owner' then
+        raise exception 'Owner role cannot be changed';
+    end if;
+
+    if p_role = 'owner' and actor_role != 'owner' then
+        raise exception 'Only owners can assign owner role';
+    end if;
+
+    update workspace_members
+    set role = p_role
+    where id = p_member_id
+    returning * into updated_member;
+
+    return updated_member;
+end;
+$$ language plpgsql security definer;
+
+create or replace function public.remove_workspace_member(
+    p_member_id uuid
+)
+returns void as $$
+declare
+    target_member workspace_members;
+begin
+    select * into target_member
+    from workspace_members
+    where id = p_member_id;
+
+    if target_member is null then
+        raise exception 'Workspace member not found';
+    end if;
+
+    if target_member.role = 'owner' then
+        raise exception 'Owner cannot be removed';
+    end if;
+
+    if not can_manage_workspace(target_member.workspace_id) and target_member.user_id != auth.uid() then
+        raise exception 'Not authorized to remove this member';
+    end if;
+
+    delete from workspace_members where id = p_member_id;
 end;
 $$ language plpgsql security definer;
 

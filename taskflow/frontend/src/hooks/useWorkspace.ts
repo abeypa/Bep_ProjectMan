@@ -6,7 +6,9 @@ import {
   Workspace,
   WorkspaceWithCounts,
   WorkspaceMember,
+  WorkspaceMemberWithProfile,
   WorkspaceInvitation,
+  WorkspaceInvitationDetails,
   CreateWorkspaceInput,
   InviteMemberInput,
   Profile,
@@ -68,8 +70,8 @@ export function useWorkspaceMembers(workspaceId: string | undefined) {
       if (error) throw error
       return data.map((m) => ({
         ...m,
-        profile: m.profile as Profile,
-      })) as (WorkspaceMember & { profile: Profile })[]
+        profile: (m.profile as Profile | null) ?? null,
+      })) as WorkspaceMemberWithProfile[]
     },
     enabled: !!workspaceId,
   })
@@ -93,6 +95,26 @@ export function useWorkspaceInvitations(workspaceId: string | undefined) {
       return data as WorkspaceInvitation[]
     },
     enabled: !!workspaceId,
+  })
+}
+
+export function useInvitationDetails(token: string | undefined) {
+  return useQuery({
+    queryKey: [QUERY_KEYS.INVITATION_DETAILS, token],
+    queryFn: async () => {
+      if (!token) return null
+
+      const { data, error } = await supabase.rpc(
+        "get_workspace_invitation_details",
+        {
+          invitation_token: token,
+        }
+      )
+
+      if (error) throw error
+      return (data?.[0] ?? null) as WorkspaceInvitationDetails | null
+    },
+    enabled: !!token,
   })
 }
 
@@ -222,12 +244,10 @@ export function useUpdateMemberRole() {
       role: string
       workspaceId: string
     }) => {
-      const { data, error } = await supabase
-        .from("workspace_members")
-        .update({ role })
-        .eq("id", memberId)
-        .select()
-        .single()
+      const { data, error } = await supabase.rpc("update_workspace_member_role", {
+        p_member_id: memberId,
+        p_role: role,
+      })
 
       if (error) throw error
       return { data, workspaceId }
@@ -252,10 +272,9 @@ export function useRemoveMember() {
       memberId: string
       workspaceId: string
     }) => {
-      const { error } = await supabase
-        .from("workspace_members")
-        .delete()
-        .eq("id", memberId)
+      const { error } = await supabase.rpc("remove_workspace_member", {
+        p_member_id: memberId,
+      })
 
       if (error) throw error
       return workspaceId

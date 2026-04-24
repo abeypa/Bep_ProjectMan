@@ -3,9 +3,15 @@ import { useQueryClient } from "@tanstack/react-query"
 import { RealtimeChannel, RealtimePostgresChangesPayload } from "@supabase/supabase-js"
 import { supabase } from "@/lib/supabase"
 import { QUERY_KEYS } from "@/lib/constants"
-import { Task, Comment, BoardColumn } from "@/types"
+import { Task } from "@/types"
 
-type TableName = "tasks" | "comments" | "board_columns" | "activity_log"
+type TableName =
+  | "tasks"
+  | "comments"
+  | "board_columns"
+  | "activity_log"
+  | "workspace_members"
+  | "workspace_invitations"
 
 interface RealtimeConfig {
   table: TableName
@@ -211,6 +217,56 @@ export function useRealtimeActivity(workspaceId: string | undefined) {
           // Invalidate activity feed
           queryClient.invalidateQueries({
             queryKey: [QUERY_KEYS.ACTIVITY, workspaceId],
+          })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      channel.unsubscribe()
+    }
+  }, [workspaceId, queryClient])
+}
+
+export function useRealtimeWorkspaceMembers(workspaceId: string | undefined) {
+  const queryClient = useQueryClient()
+
+  useEffect(() => {
+    if (!workspaceId) return
+
+    const channel = supabase
+      .channel(`workspace-members:${workspaceId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "workspace_members",
+          filter: `workspace_id=eq.${workspaceId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({
+            queryKey: [QUERY_KEYS.WORKSPACE_MEMBERS, workspaceId],
+          })
+          queryClient.invalidateQueries({
+            queryKey: [QUERY_KEYS.WORKSPACES],
+          })
+          queryClient.invalidateQueries({
+            queryKey: [QUERY_KEYS.WORKSPACE_ROLE, workspaceId],
+          })
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "workspace_invitations",
+          filter: `workspace_id=eq.${workspaceId}`,
+        },
+        () => {
+          queryClient.invalidateQueries({
+            queryKey: [QUERY_KEYS.WORKSPACE_INVITATIONS, workspaceId],
           })
         }
       )

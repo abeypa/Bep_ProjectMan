@@ -12,6 +12,8 @@ import { MainLayout } from "@/components/layout/MainLayout"
 // Pages
 import { HomePage } from "@/pages/Home"
 import { WorkspaceDashboard } from "@/pages/workspace/WorkspaceDashboard"
+import { WorkspaceSettingsPage } from "@/pages/workspace/WorkspaceSettings"
+import { InvitationPage } from "@/pages/workspace/InvitationPage"
 import { ProjectBoard } from "@/pages/project/ProjectBoard"
 
 // Providers
@@ -45,7 +47,7 @@ function App() {
           }
         >
           <Route index element={<WorkspaceDashboard />} />
-          <Route path="settings" element={<WorkspaceSettings />} />
+          <Route path="settings" element={<WorkspaceSettingsPage />} />
 
           {/* Project Routes */}
           <Route path="p/:projectSlug">
@@ -78,18 +80,6 @@ function App() {
   )
 }
 
-// Placeholder components for routes not yet implemented
-function WorkspaceSettings() {
-  return (
-    <div className="flex items-center justify-center h-full">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold mb-2">Workspace Settings</h1>
-        <p className="text-muted-foreground">Coming soon...</p>
-      </div>
-    </div>
-  )
-}
-
 function ProjectList() {
   return (
     <div className="flex items-center justify-center h-full">
@@ -117,17 +107,6 @@ function ProjectSettings() {
     <div className="flex items-center justify-center h-full">
       <div className="text-center">
         <h1 className="text-2xl font-bold mb-2">Project Settings</h1>
-        <p className="text-muted-foreground">Coming soon...</p>
-      </div>
-    </div>
-  )
-}
-
-function InvitationPage() {
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold mb-2">Accept Invitation</h1>
         <p className="text-muted-foreground">Coming soon...</p>
       </div>
     </div>

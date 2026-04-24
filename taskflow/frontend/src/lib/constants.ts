@@ -14,7 +14,7 @@ export const WORKSPACE_ROLES: { value: WorkspaceRole; label: string; description
   { value: "owner", label: "Owner", description: "Full access, can delete workspace" },
   { value: "admin", label: "Admin", description: "Can manage members and settings" },
   { value: "member", label: "Member", description: "Can create and edit tasks" },
-  { value: "viewer", label: "Viewer", description: "Read-only access" },
+  { value: "guest", label: "Guest", description: "Read-only access" },
 ]
 
 export const DEFAULT_BOARD_COLUMNS = [
@@ -71,6 +71,8 @@ export const QUERY_KEYS = {
   WORKSPACE: "workspace",
   WORKSPACE_MEMBERS: "workspace-members",
   WORKSPACE_INVITATIONS: "workspace-invitations",
+  WORKSPACE_ROLE: "workspace-role",
+  INVITATION_DETAILS: "invitation-details",
   PROJECTS: "projects",
   PROJECT: "project",
   BOARD: "board",
